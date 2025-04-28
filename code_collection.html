@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Collection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .code-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            color: #444;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        pre {
+            margin: 0;
+            border-radius: 4px;
+        }
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Operating System Code Collection</h1>
+
+        <div class="code-section">
+            <h2>create_thread.py</h2>
+            <pre><code class="language-python">
+import threading
+import time
+
+#shared variable
+shared_variable = 0
+
+#lock to ensure thread safety
+lock = threading.Lock()
+
+# Function for increamenting the shared variable
+def increment():
+  for _ in range(100000):
+    with lock:
+      global shared_variable
+      shared_variable += 1
+  print("Current value increment operation of shread variable :",shared_variable) 
+  #print (Shared variable)     
+
+# Function for decrementing the shared variable
+def decrement():
+  for _ in range(100000):
+    with lock:
+      global shared_variable
+      shared_variable -= 1
+  print("Current value decrement operation ",shared_variable) 
+  #print (Shared variable)    
+
+#Create thread
+thread1 = threading.Thread(target=increment)
+thread2 = threading.Thread(target=decrement)
+
+#strat thread
+thread1.start()
+thread2.start()
+
+#wait for thread to finish
+thread1.join()
+thread2.join()
+
+#print the final value of the shared variable 
+print("Final value of the shred variable :", shared_variable)
+            </code></pre>
+        </div>
+
+        <div class="code-section">
+            <h2>mutex_thread.py</h2>
+            <pre><code class="language-python">
+import threading
+
+#shared variable
+shared_value=100
+
+#mutext lock
+lock= threading.Lock()
+
+def increment():
+    global shared_value
+    with lock: #acuire the lock
+        old_value =shared_value
+        print("old value before increment ", old_value)
+        shared_value = old_value+1
+        print("Thread 1 : Increment value to {shared_value}")
+
+def decrement():
+    global shared_value
+    with lock: #acuire the lock
+        old_value =shared_value
+        print("old value before increment ", old_value)
+        shared_value = old_value-1
+        print("Thread 2 : Decrement value to {shared_value}")
+
+thread1= threading.Thread(target=increment)
+thread2= threading.Thread(target=decrement)
+
+thread1.start()
+thread2.start()
+
+thread1.join()
+thread2.join()
+
+print("Final value of the shared value :", shared_value)
+            </code></pre>
+        </div>
+
+        <div class="code-section">
+            <h2>semaphore_thread.py</h2>
+            <pre><code class="language-python">
+import threading
+
+shrared_variable = 100
+
+semaphore=threading.Semaphore(1)
+
+def increment():
+    global shrared_variable
+    for _ in range(100000):
+        semaphore.acquire()
+        shrared_variable += 1
+        semaphore.release()
+    print("currnent value of the thread increment operation :",shrared_variable)
+
+def decrement():
+    global shrared_variable
+    for _ in range(100000):
+        semaphore.acquire()
+        shrared_variable -= 1
+        semaphore.release()
+    print("currnent value of the thread decrement operation :",shrared_variable)
+
+thread1=threading.Thread(target=increment)
+thread2=threading.Thread(target=decrement)
+
+thread1.start()
+thread2.start()
+
+thread1.join()
+thread2.join()
+print("Final value of the shred variable :", shrared_variable)
+            </code></pre>
+        </div>
+
+        <div class="code-section">
+            <h2>pro_con_thread.py</h2>
+            <pre><code class="language-python">
+import threading
+import time
+
+buffer=[]
+buffer_size=10
+condition = threading.Condition()
+
+def producer():
+    for _ in range(5):
+        with condition:
+            while len(buffer)==buffer_size:
+                condition.wait()
+            buffer.append(1)
+            print('produce has produced item , consumer can consume')
+            condition.notify()
+        time.sleep(1)
+
+def consumer():
+    for _ in range(5):
+        with condition:
+            while not buffer:
+                condition.wait()
+            buffer.pop()
+            print('consumer has consumed item')
+            condition.notify()
+        time.sleep(2)
+
+thread1=threading.Thread(target=producer)
+thread2=threading.Thread(target=consumer)
+
+thread1.start()
+thread2.start()
+
+thread1.join()
+thread2.join()
+            </code></pre>
+        </div>
+
+        <div class="code-section">
+            <h2>banker.cpp</h2>
+            <pre><code class="language-cpp">
+#include <iostream>
+using namespace std;
+
+const int P = 5; // Number of processes
+const int R = 3; // Number of resources
+
+void calculateNeed(int need[P][R], int max[P][R], int alloc[P][R]) {
+    for (int i = 0; i < P; i++)
+        for (int j = 0; j < R; j++)
+            need[i][j] = max[i][j] - alloc[i][j];
+}
+
+bool isSafe(int processes[], int avail[], int max[][R], int alloc[][R]) {
+    int need[P][R];
+    calculateNeed(need, max, alloc);
+
+    bool finish[P] = {false};
+    int safeSeq[P];
+    int work[R];
+    for (int i = 0; i < R; i++)
+        work[i] = avail[i];
+     
+    int count = 0;
+    while (count < P) {
+        bool found = false;
+        for (int p = 0; p < P; p++) {
+            if (!finish[p]) {
+                int j;
+                for (j = 0; j < R; j++)
+                    if (need[p][j] > work[j])
+                        break;
+                
+                if (j == R) {
+                    for (int k = 0; k < R; k++)
+                        work[k] += alloc[p][k];
+                    
+                    safeSeq[count++] = processes[p];
+                    finish[p] = true;
+                    found = true;
+                }
+            }
+        }
+        if (!found) {
+            cout << "System is not in a safe state!" << endl;
+            return false;
+        }
+    }
+    
+    cout << "System is in a safe state.\nSafe sequence: ";
+    for (int i = 0; i < P; i++)
+        cout << safeSeq[i] << " ";
+    cout << endl;
+    return true;
+}
+
+int main() {
+    int processes[P] = {0, 1, 2, 3, 4};
+    int available[R] = {3, 3, 2};
+    int max[P][R] = {{7, 5, 3}, {3, 2, 2}, {9, 0, 2}, {2, 2, 2}, {4, 3, 3}};
+    int allocation[P][R] = {{0, 1, 0}, {2, 0, 0}, {3, 0, 2}, {2, 1, 1}, {0, 0, 2}};
+    
+    isSafe(processes, available, max, allocation);
+    return 0;
+}
+            </code></pre>
+        </div>
+
+        <div class="code-section">
+            <h2>fcfs.py</h2>
+            <pre><code class="language-python">
+#Using FCFS
+#process :[Arriva_time,Burst_time,pid]
+
+def fcfs(process_list):
+    t=0
+    gantt=[]
+    completed={}
+    process_list.sort()
+    while process_list != []:
+        if process_list[0][0] > t:
+            t += 1
+            gantt.append("Idel")
+            continue
+        else:
+            process = process_list.pop(0)
+            gantt.append(process[2])
+            t += process[1]
+            pid = process[2]
+            ct = t
+            tt = ct - process[0]
+            wt = tt - process[1]
+            completed[pid]=[ct,tt,wt]
+    print(gantt)
+    print(completed)
+
+if __name__=="__main__":
+    process_list=[[3,6,"p1"],[5,2,"p2"],[1,8,"p3"],[2,3,"p4"],[4,4,"p5"]]
+    fcfs(process_list)
+            </code></pre>
+        </div>
+
+        <div class="code-section">
+            <h2>bash.sh</h2>
+            <pre><code class="language-bash">
+#!/bin/bash
+
+Create() {
+    echo "Enter the Address book name"
+    read name
+    # check if address book already exists
+    res=$(ls | grep -w "$name" | wc -w)
+    if [ $res -gt 0 ]; then
+        echo "File already exists"
+    else
+        touch "$name"
+        echo "File is created"
+    fi
+}
+
+Display() {
+    echo "Enter the Address book name to display"
+    read name
+    res=$(ls | grep -w "$name" | wc -w)
+    if [ $res -gt 0 ]; then
+        cat "$name"
+    else 
+        echo "File does not exist"
+    fi
+}
+
+Insert() {
+    echo "Enter the address book name in which you want to enter the data"
+    read name
+    if [ -f "$name" ]; then
+        echo "Enter email"
+        read email
+        len=$(cat "$name" | grep -w "$email" | wc -w)
+        if [ $len -gt 0 ]; then
+            echo "Email ID already exists"
+        else 
+            echo "Enter the first name, last name, PRN and Mobile Number"
+            read fname lastname prn mobilenumber
+            record="$fname $lastname $prn $mobilenumber $email"
+            echo "$record" >> "$name"
+            echo "Record Inserted Successfully"
+        fi
+    else
+        echo "File does not exist"
+    fi
+}
+
+Modify() {
+    echo "Enter the address book name in which you want to Modify"
+    read name
+    res=$(ls | grep -w "$name" | wc -w)
+    if [ $res -gt 0 ]; then
+        echo "Enter Email"
+        read email
+        len=$(cat "$name" | grep -w "$email" | wc -w)
+        if [ $len -gt 0 ]; then
+            echo "Enter first name, last name, PRN and Mobile Number"
+            read fname lastname prn mobilenumber
+            new="$fname $lastname $prn $mobilenumber $email"
+            old=$(cat "$name" | grep -w "$email")
+            echo "Old data: $old"
+            echo "New data: $new"
+            sed -i "s|$old|$new|g" "$name"
+            echo "Record is updated Successfully"
+        else
+            echo "Error: Email not found"
+        fi
+    else
+        echo "File does not exist"
+    fi
+}
+
+Exit() {
+    echo "Exiting..."
+    exit
+}
+
+while true
+do 
+    echo "***** MENU *****"
+    echo "1. Create"
+    echo "2. Display"
+    echo "3. Insert"
+    echo "4. Modify"
+    echo "5. Exit"
+    echo "Enter your choice"
+    read choice
+    case $choice in 
+        1) Create ;;
+        2) Display ;;
+        3) Insert ;;
+        4) Modify ;;
+        5) Exit ;;
+        *) echo "Invalid choice" ;;
+    esac
+done
+            </code></pre>
+        </div>
+
+        <div class="code-section">
+            <h2>chils_process.sh</h2>
+            <pre><code class="language-bash">
+#!/bin/bash
+echo "Parent process Execution....."
+echo "Parent process ID: $$"
+#child process
+(
+echo "Child process Execution......"
+
+echo "Child process ID: $$(BASHPID:$BASHPID), Parent process ID:$PPID"
+
+sleep 4
+echo "Peocess execution Done......"
+
+) &
+wait
+echo "Child process has been Created Successfully...!"
+            </code></pre>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-bash.min.js"></script>
+</body>
+</html> 
